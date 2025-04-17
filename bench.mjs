@@ -7,7 +7,7 @@ function request(tpl) {
 }
 
 const WARM_UP = 1e3;
-const COUNT = 1e5;
+const COUNT = 1e6;
 
 const FRAGMENT = Buffer.from([
   'HTTP/1.1 200 OK',
