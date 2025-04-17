@@ -6,8 +6,8 @@ function request(tpl) {
   return tpl.raw[0].replace(/^\s+/gm, '').replace(/\n/gm, '').replace(/\\r/gm, '\r').replace(/\\n/gm, '\n')
 }
 
-const WARM_UP = 1e3;
-const COUNT = 1e6;
+const WARM_UP = 1e5;
+const COUNT = 1e7;
 
 const FRAGMENT = Buffer.from([
   'HTTP/1.1 200 OK',
@@ -74,4 +74,8 @@ for (const [label, wasm] of [['generic', generic], ['simd', simd]]) {
   results[label] = bps;
 }
 
-console.log('SIMD/no-SIMD ratio', results.simd / results.generic);
+console.log(
+  'simd/generic ratio',
+  (100 * results.simd / results.generic).toFixed(1),
+  '%'
+);
