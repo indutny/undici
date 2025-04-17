@@ -9,13 +9,11 @@ const { isMainThread } = require('node:worker_threads')
 
 const { Pool, Client, fetch, Agent, setGlobalDispatcher } = require('..')
 
-const { printResults } = require('./_util')
-
 const genericWasm = require('../lib/llhttp/llhttp-wasm.js');
 const simdWasm = require('../lib/llhttp/llhttp_simd-wasm.js');
 const constants = require('../lib/llhttp/constants.js');
 
-const iterations = (parseInt(process.env.SAMPLES, 10) || 1000000) + 1
+const iterations = (parseInt(process.env.SAMPLES, 10) || 100000) + 1
 const errorThreshold = parseInt(process.env.ERROR_THRESHOLD, 10) || 1
 
 const RESPONSE = Buffer.from([
@@ -93,14 +91,7 @@ async function main () {
     {
       iterations,
       errorThreshold,
-      print: false
-    },
-    (err, results) => {
-      if (err) {
-        throw err
-      }
-
-      printResults(results)
+      print: true
     }
   )
 }
