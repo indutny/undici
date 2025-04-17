@@ -66,12 +66,12 @@ for (const [label, wasm] of [['generic', generic], ['simd', simd]]) {
     llhttp.llhttp_execute(instance, fragmentPtr, FRAGMENT.byteLength);
   }
   const duration = process.hrtime.bigint() - start;
-  const rps = COUNT / Number(duration) * 1e9;
-  console.log(label, rps);
+  const bps = FRAGMENT.byteLength * COUNT / Number(duration) * 1e9;
+  console.log(label, Math.round(bps / 1024 / 1024), 'mb/sec');
 
   llhttp.llhttp_free(instance);
 
-  results[label] = rps;
+  results[label] = bps;
 }
 
-console.log('Ratio', results.simd / results.generic);
+console.log('SIMD/no-SIMD ratio', results.simd / results.generic);
