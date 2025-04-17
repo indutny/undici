@@ -6,8 +6,8 @@ function request(tpl) {
   return tpl.raw[0].replace(/^\s+/gm, '').replace(/\n/gm, '').replace(/\\r/gm, '\r').replace(/\\n/gm, '\n')
 }
 
-const WARM_UP = 3;
-const COUNT = 4e6;
+const WARM_UP = 1e3;
+const COUNT = 1e5;
 
 const FRAGMENT = Buffer.from([
   'HTTP/1.1 200 OK',
@@ -58,7 +58,7 @@ for (const [label, wasm] of [['generic', generic], ['simd', simd]]) {
   const instance = llhttp.llhttp_alloc(constants.TYPE.RESPONSE)
 
   for (let i = 0; i < WARM_UP; i++) {
-    console.log(llhttp.llhttp_execute(instance, fragmentPtr, FRAGMENT.byteLength));
+    llhttp.llhttp_execute(instance, fragmentPtr, FRAGMENT.byteLength);
   }
 
   const start = process.hrtime.bigint();
