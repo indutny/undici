@@ -6,31 +6,34 @@ function request(tpl) {
   return tpl.raw[0].replace(/^\s+/gm, '').replace(/\n/gm, '').replace(/\\r/gm, '\r').replace(/\\n/gm, '\n')
 }
 
-const WARM_UP = 100000;
+const WARM_UP = 3;
 const COUNT = 4e6;
 
-const FRAGMENT = Buffer.from(request`
-  HTTP/1.1 200 OK\r\n
-  Date: Thu, 17 Apr 2025 17:01:42 GMT\r\n
-  Content-Type: text/html; charset=utf-8\r\n
-  Transfer-Encoding: chunked\r\n
-  Connection: keep-alive\r\n
-  Age: 199\r\n
-  Cache-Control: public, max-age=0, must-revalidate\r\n
-  strict-transport-security: max-age=31536000; includeSubDomains; preload\r\n
-  x-matched-path: /[locale]\r\n
-  x-nextjs-prerender: 1\r\n
-  x-nextjs-stale-time: 4294967294\r\n
-  x-powered-by: Next.js\r\n
-  x-vercel-cache: HIT\r\n
-  x-vercel-id: sfo1::lhr1::mqksv-1744909302718-4862dd69bea3\r\n
-  cf-cache-status: DYNAMIC\r\n
-  vary: accept-encoding\r\n
-  X-Content-Type-Options: nosniff\r\n
-  Server: cloudflare\r\n
-  CF-RAY: 931d7c65ecfde9e4-LAX\r\n\r\n
-  0\r\n\r\n
-`);
+const FRAGMENT = Buffer.from([
+  'HTTP/1.1 200 OK',
+  'Date: Thu, 17 Apr 2025 17:01:42 GMT',
+  'Content-Type: text/html; charset=utf-8',
+  'Transfer-Encoding: chunked',
+  'Connection: keep-alive',
+  'Age: 199',
+  'Cache-Control: public, max-age=0, must-revalidate',
+  'strict-transport-security: max-age=31536000; includeSubDomains; preload',
+  'x-matched-path: /[locale]',
+  'x-nextjs-prerender: 1',
+  'x-nextjs-stale-time: 4294967294',
+  'x-powered-by: Next.js',
+  'x-vercel-cache: HIT',
+  'x-vercel-id: sfo1::lhr1::mqksv-1744909302718-4862dd69bea3',
+  'cf-cache-status: DYNAMIC',
+  'vary: accept-encoding',
+  'X-Content-Type-Options: nosniff',
+  'Server: cloudflare',
+  'CF-RAY: 931d7c65ecfde9e4-LAX',
+  '',
+  '0',
+  '',
+  '',
+].join('\r\n'));
 
 const results = {};
 
@@ -55,7 +58,7 @@ for (const [label, wasm] of [['generic', generic], ['simd', simd]]) {
   const instance = llhttp.llhttp_alloc(constants.TYPE.RESPONSE)
 
   for (let i = 0; i < WARM_UP; i++) {
-    llhttp.llhttp_execute(instance, fragmentPtr, FRAGMENT.byteLength);
+    console.log(llhttp.llhttp_execute(instance, fragmentPtr, FRAGMENT.byteLength));
   }
 
   const start = process.hrtime.bigint();
