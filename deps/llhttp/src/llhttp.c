@@ -11,6 +11,7 @@
 #endif  /* __SSE4_2__ */
 
 #ifdef __wasm__
+ #include <sys/types.h>
  #include <wasm_simd128.h>
 #endif  /* __wasm__ */
 
@@ -2687,33 +2688,36 @@ static llparse_state_t llhttp__internal__run(
       }
       #endif  /* __SSE4_2__ */
       #ifdef __wasm_simd128__
+      off_t align;
       if (endp - p >= 16) {
         v128_t input;
-        v128_t total;
+        v128_t mask;
         v128_t single;
         int match_len;
       
         /* Load input */
         input = wasm_v128_load(p);
         /* Find first character that does not match `ranges` */
-        total = wasm_i8x16_eq(input, wasm_u8x16_const_splat(0x9));
-        single = wasm_v128_and(
-          wasm_i8x16_ge(input, wasm_u8x16_const_splat(' ')),
-          wasm_i8x16_le(input, wasm_u8x16_const_splat('~'))
+        single = wasm_i8x16_ne(input, wasm_u8x16_const_splat(0x9));
+        mask = single;
+        single = wasm_v128_or(
+          wasm_i8x16_lt(input, wasm_u8x16_const_splat(' ')),
+          wasm_i8x16_gt(input, wasm_u8x16_const_splat('~'))
         );
-        total = wasm_v128_or(total, single);
-        single = wasm_v128_and(
-          wasm_i8x16_ge(input, wasm_u8x16_const_splat(0x80)),
-          wasm_i8x16_le(input, wasm_u8x16_const_splat(0xff))
+        mask = wasm_v128_and(mask, single);
+        single = wasm_v128_or(
+          wasm_i8x16_lt(input, wasm_u8x16_const_splat(0x80)),
+          wasm_i8x16_gt(input, wasm_u8x16_const_splat(0xff))
         );
-        total = wasm_v128_or(total, single);
-        total = wasm_v128_not(total);
-        match_len = __builtin_ctz(wasm_i8x16_bitmask(total));
-        if (match_len != 0) {
-          p += match_len;
-          goto s_n_llhttp__internal__n_header_value;
+        mask = wasm_v128_and(mask, single);
+        match_len = __builtin_ctz(
+          0x10000 | wasm_i8x16_bitmask(mask)
+        );
+        p += match_len;
+        if (match_len != 16) {
+          goto s_n_llhttp__internal__n_header_value_otherwise;
         }
-        goto s_n_llhttp__internal__n_header_value_otherwise;
+        goto s_n_llhttp__internal__n_header_value;
       }
       #endif  /* __wasm_simd128__ */
       switch (lookup_table[(uint8_t) *p]) {
@@ -2958,57 +2962,60 @@ static llparse_state_t llhttp__internal__run(
       }
       #endif  /* __SSE4_2__ */
       #ifdef __wasm_simd128__
+      off_t align;
       if (endp - p >= 16) {
         v128_t input;
-        v128_t total;
+        v128_t mask;
         v128_t single;
         int match_len;
       
         /* Load input */
         input = wasm_v128_load(p);
         /* Find first character that does not match `ranges` */
-        total = wasm_i8x16_eq(input, wasm_u8x16_const_splat('!'));
-        single = wasm_v128_and(
-          wasm_i8x16_ge(input, wasm_u8x16_const_splat('#')),
-          wasm_i8x16_le(input, wasm_u8x16_const_splat('\''))
+        single = wasm_i8x16_ne(input, wasm_u8x16_const_splat('!'));
+        mask = single;
+        single = wasm_v128_or(
+          wasm_i8x16_lt(input, wasm_u8x16_const_splat('#')),
+          wasm_i8x16_gt(input, wasm_u8x16_const_splat('\''))
         );
-        total = wasm_v128_or(total, single);
-        single = wasm_v128_and(
-          wasm_i8x16_ge(input, wasm_u8x16_const_splat('*')),
-          wasm_i8x16_le(input, wasm_u8x16_const_splat('+'))
+        mask = wasm_v128_and(mask, single);
+        single = wasm_v128_or(
+          wasm_i8x16_lt(input, wasm_u8x16_const_splat('*')),
+          wasm_i8x16_gt(input, wasm_u8x16_const_splat('+'))
         );
-        total = wasm_v128_or(total, single);
-        single = wasm_v128_and(
-          wasm_i8x16_ge(input, wasm_u8x16_const_splat('-')),
-          wasm_i8x16_le(input, wasm_u8x16_const_splat('.'))
+        mask = wasm_v128_and(mask, single);
+        single = wasm_v128_or(
+          wasm_i8x16_lt(input, wasm_u8x16_const_splat('-')),
+          wasm_i8x16_gt(input, wasm_u8x16_const_splat('.'))
         );
-        total = wasm_v128_or(total, single);
-        single = wasm_v128_and(
-          wasm_i8x16_ge(input, wasm_u8x16_const_splat('0')),
-          wasm_i8x16_le(input, wasm_u8x16_const_splat('9'))
+        mask = wasm_v128_and(mask, single);
+        single = wasm_v128_or(
+          wasm_i8x16_lt(input, wasm_u8x16_const_splat('0')),
+          wasm_i8x16_gt(input, wasm_u8x16_const_splat('9'))
         );
-        total = wasm_v128_or(total, single);
-        single = wasm_v128_and(
-          wasm_i8x16_ge(input, wasm_u8x16_const_splat('A')),
-          wasm_i8x16_le(input, wasm_u8x16_const_splat('Z'))
+        mask = wasm_v128_and(mask, single);
+        single = wasm_v128_or(
+          wasm_i8x16_lt(input, wasm_u8x16_const_splat('A')),
+          wasm_i8x16_gt(input, wasm_u8x16_const_splat('Z'))
         );
-        total = wasm_v128_or(total, single);
-        single = wasm_v128_and(
-          wasm_i8x16_ge(input, wasm_u8x16_const_splat('^')),
-          wasm_i8x16_le(input, wasm_u8x16_const_splat('z'))
+        mask = wasm_v128_and(mask, single);
+        single = wasm_v128_or(
+          wasm_i8x16_lt(input, wasm_u8x16_const_splat('^')),
+          wasm_i8x16_gt(input, wasm_u8x16_const_splat('z'))
         );
-        total = wasm_v128_or(total, single);
-        single = wasm_i8x16_eq(input, wasm_u8x16_const_splat('|'));
-        total = wasm_v128_or(total, single);
-        single = wasm_i8x16_eq(input, wasm_u8x16_const_splat('~'));
-        total = wasm_v128_or(total, single);
-        total = wasm_v128_not(total);
-        match_len = __builtin_ctz(wasm_i8x16_bitmask(total));
-        if (match_len != 0) {
-          p += match_len;
-          goto s_n_llhttp__internal__n_header_field_general;
+        mask = wasm_v128_and(mask, single);
+        single = wasm_i8x16_ne(input, wasm_u8x16_const_splat('|'));
+        mask = wasm_v128_and(mask, single);
+        single = wasm_i8x16_ne(input, wasm_u8x16_const_splat('~'));
+        mask = wasm_v128_and(mask, single);
+        match_len = __builtin_ctz(
+          0x10000 | wasm_i8x16_bitmask(mask)
+        );
+        p += match_len;
+        if (match_len != 16) {
+          goto s_n_llhttp__internal__n_header_field_general_otherwise;
         }
-        goto s_n_llhttp__internal__n_header_field_general_otherwise;
+        goto s_n_llhttp__internal__n_header_field_general;
       }
       #endif  /* __wasm_simd128__ */
       switch (lookup_table[(uint8_t) *p]) {
