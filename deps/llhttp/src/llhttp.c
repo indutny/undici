@@ -11,7 +11,6 @@
 #endif  /* __SSE4_2__ */
 
 #ifdef __wasm__
- #include <sys/types.h>
  #include <wasm_simd128.h>
 #endif  /* __wasm__ */
 
@@ -2688,7 +2687,6 @@ static llparse_state_t llhttp__internal__run(
       }
       #endif  /* __SSE4_2__ */
       #ifdef __wasm_simd128__
-      off_t align;
       if (endp - p >= 16) {
         v128_t input;
         v128_t mask;
@@ -2962,7 +2960,6 @@ static llparse_state_t llhttp__internal__run(
       }
       #endif  /* __SSE4_2__ */
       #ifdef __wasm_simd128__
-      off_t align;
       if (endp - p >= 16) {
         v128_t input;
         v128_t mask;
