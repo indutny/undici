@@ -39,6 +39,48 @@ void llhttp_init(llhttp_t* parser, llhttp_type_t type,
 }
 
 
+#if defined(__wasm__)
+
+extern int wasm_on_debug(const char* at, size_t length);
+extern int wasm_on_message_begin(llhttp_t * p);
+extern int wasm_on_url(llhttp_t* p, const char* at, size_t length);
+extern int wasm_on_status(llhttp_t* p, const char* at, size_t length);
+extern int wasm_on_header_field(llhttp_t* p, const char* at, size_t length);
+extern int wasm_on_header_value(llhttp_t* p, const char* at, size_t length);
+extern int wasm_on_headers_complete(llhttp_t * p, int status_code,
+                                    uint8_t upgrade, int should_keep_alive);
+extern int wasm_on_body(llhttp_t* p, const char* at, size_t length);
+extern int wasm_on_message_complete(llhttp_t * p);
+
+static int wasm_on_headers_complete_wrap(llhttp_t* p) {
+  return wasm_on_headers_complete(p, p->status_code, p->upgrade,
+                                  llhttp_should_keep_alive(p));
+}
+
+const llhttp_settings_t wasm_settings = {
+  .on_message_begin = 0,
+  .on_url = 0,
+  .on_status = 0,
+  .on_header_field = 0,
+  .on_header_value = 0,
+  .on_headers_complete = 0,
+  .on_body = 0,
+  .on_message_complete = 0,
+};
+
+
+llhttp_t* llhttp_alloc(llhttp_type_t type) {
+  llhttp_t* parser = malloc(sizeof(llhttp_t));
+  llhttp_init(parser, type, &wasm_settings);
+  return parser;
+}
+
+void llhttp_free(llhttp_t* parser) {
+  free(parser);
+}
+
+#endif  // defined(__wasm__)
+
 /* Some getters required to get stuff from the parser */
 
 uint8_t llhttp_get_type(llhttp_t* parser) {
@@ -450,58 +492,6 @@ int llhttp__on_reset(llhttp_t* s, const char* p, const char* endp) {
   int err;
   CALLBACK_MAYBE(s, on_reset);
   return err;
-}
-
-__attribute__((visibility("default")))
-int run() {
-  const llhttp_settings_t wasm_settings = {
-    .on_message_begin = 0,
-    .on_url = 0,
-    .on_status = 0,
-    .on_header_field = 0,
-    .on_header_value = 0,
-    .on_headers_complete = 0,
-    .on_body = 0,
-    .on_message_complete = 0,
-  };
-
-  static const char* response =
-    "HTTP/1.1 200 OK\r\n"
-    "Date: Thu, 17 Apr 2025 17:01:42 GMT\r\n"
-    "Content-Type: text/html; charset=utf-8\r\n"
-    "Transfer-Encoding: chunked\r\n"
-    "Connection: keep-alive\r\n"
-    "Age: 199\r\n"
-    "Cache-Control: public, max-age=0, must-revalidate\r\n"
-    "strict-transport-security: max-age=31536000; includeSubDomains; preload\r\n"
-    "x-matched-path: /[locale]\r\n"
-    "x-nextjs-prerender: 1\r\n"
-    "x-nextjs-stale-time: 4294967294\r\n"
-    "x-powered-by: Next.js\r\n"
-    "x-vercel-cache: HIT\r\n"
-    "x-vercel-id: sfo1::lhr1::mqksv-1744909302718-4862dd69bea3\r\n"
-    "cf-cache-status: DYNAMIC\r\n"
-    "vary: accept-encoding\r\n"
-    "X-Content-Type-Options: nosniff\r\n"
-    "Server: cloudflare\r\n"
-    "CF-RAY: 931d7c65ecfde9e4-LAX\r\n"
-    "\r\n"
-    "0\r\n"
-    "\r\n\r\n";
-
-  int len = strlen(response);
-
-  llhttp_t* parser = malloc(sizeof(llhttp_t));
-  llhttp_init(parser, HTTP_RESPONSE, &wasm_settings);
-
-  int res = 0;
-  for (int i = 0; i < 1000000; i ++) {
-    res |= llhttp_execute(parser, response, len);
-  }
-
-  free(parser);
-
-  return res;
 }
 
 

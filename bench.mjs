@@ -1,15 +1,15 @@
 import assert from 'node:assert';
 
-import main from './main-wasm.js';
-import updated from './lib/llhttp/llhttp_simd-wasm.js';
+import plain from './lib/llhttp/llhttp-wasm.js';
+import simd from './lib/llhttp/llhttp_simd-wasm.js';
 import constants from './lib/llhttp/constants.js';
 
 const WARM_UP = 1000;
-const COUNT = 1e22;
+const COUNT = 1e6;
 
 const FRAGMENT = Buffer.from([
   'HTTP/1.1 200 OK',
-  'Date: Thu, 17 Apr 2025 17:01:42 GMT',
+  'Date: Thu, 17 Apr 2025 17:01:42 GMTaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
   'Content-Type: text/html; charset=utf-8',
   'Transfer-Encoding: chunked',
   'Connection: keep-alive',
@@ -32,10 +32,11 @@ const FRAGMENT = Buffer.from([
   '',
   '',
 ].join('\r\n'));
+console.error(FRAGMENT.length);
 
 const results = {};
 
-for (const [label, wasm] of [['updated', updated]]) {
+for (const [label, wasm] of [['plain', plain], ['simd', simd]]) {
   const mod = await WebAssembly.compile(wasm)
   const { exports: llhttp } = await WebAssembly.instantiate(mod, {
     env: {
@@ -80,7 +81,7 @@ for (const [label, wasm] of [['updated', updated]]) {
 }
 
 console.log(
-  'updated/main ratio',
-  (100 * results.updated / results.main).toFixed(1),
+  'simd/plain ratio',
+  (100 * results.simd / results.plain).toFixed(1),
   '%'
 );
