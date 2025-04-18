@@ -149,6 +149,9 @@ llhttp_errno_t llhttp_finish(llhttp_t* parser);
 LLHTTP_EXPORT
 int llhttp_message_needs_eof(const llhttp_t* parser);
 
+LLHTTP_EXPORT
+int run();
+
 /* Returns `1` if there might be any other messages following the last that was
  * successfully parsed.
  */

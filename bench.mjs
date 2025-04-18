@@ -5,7 +5,7 @@ import updated from './lib/llhttp/llhttp_simd-wasm.js';
 import constants from './lib/llhttp/constants.js';
 
 const WARM_UP = 1000;
-const COUNT = 1000000;
+const COUNT = 1e22;
 
 const FRAGMENT = Buffer.from([
   'HTTP/1.1 200 OK',
@@ -35,7 +35,7 @@ const FRAGMENT = Buffer.from([
 
 const results = {};
 
-for (const [label, wasm] of [['main', main], ['updated', updated]]) {
+for (const [label, wasm] of [['updated', updated]]) {
   const mod = await WebAssembly.compile(wasm)
   const { exports: llhttp } = await WebAssembly.instantiate(mod, {
     env: {
