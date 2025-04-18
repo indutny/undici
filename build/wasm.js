@@ -21,7 +21,7 @@ const WASM_OPT = process.env.WASM_OPT || './wasm-opt'
 const EXTERNAL_PATH = process.env.EXTERNAL_PATH
 
 // These are relevant for undici and should not be overridden
-WASM_CFLAGS += ' -Ofast -fno-exceptions -fvisibility=hidden -mexec-model=reactor'
+WASM_CFLAGS += ' -O3 -ffast-math -fno-exceptions -fvisibility=hidden -mexec-model=reactor'
 WASM_LDFLAGS += ' -Wl,-error-limit=0 -Wl,-O3 -Wl,--lto-O3 -Wl,--strip-all'
 WASM_LDFLAGS += ' -Wl,--allow-undefined -Wl,--export-dynamic -Wl,--export-table'
 WASM_LDFLAGS += ' -Wl,--export=malloc -Wl,--export=free -Wl,--no-entry'

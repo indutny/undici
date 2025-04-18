@@ -2663,12 +2663,10 @@ static llparse_state_t llhttp__internal__run(
         v128_t mask;
         v128_t single;
         int match_len;
-        const unsigned char* aligned_p;
-
-        aligned_p = (const unsigned char*) ((intptr_t) p & ~(0xf));
+        uint32_t bitmask;
       
-        /* Load input from aligned location */
-        input = wasm_v128_load(aligned_p);
+        /* Load input */
+        input = wasm_v128_load(p);
         /* Find first character that does not match `ranges` */
         single = wasm_i8x16_eq(input, r1);
         mask = single;
@@ -2682,13 +2680,9 @@ static llparse_state_t llhttp__internal__run(
           wasm_i8x16_le(input, r5)
         );
         mask = wasm_v128_or(mask, single);
-        uint32_t bitmask = ~wasm_i8x16_bitmask(mask);
-        // Zero alignment
-        bitmask >>= (intptr_t) p & 0xf;
-        bitmask <<= (intptr_t) p & 0xf;
-        // Bitmask it at most 16 bits
+        bitmask = ~wasm_i8x16_bitmask(mask);
         match_len = __builtin_ctz(bitmask);
-        p = aligned_p + match_len;
+        p = p + match_len;
         if (match_len != 16) {
           goto s_n_llhttp__internal__n_header_value_otherwise;
         }
