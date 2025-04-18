@@ -9,24 +9,8 @@ const COUNT = 1000000;
 
 const FRAGMENT = Buffer.from([
   'HTTP/1.1 200 OK',
-  'Date: Thu, 17 Apr 2025 17:01:42 GMT',
-  'Content-Type: text/html; charset=utf-8',
+  'Date: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
   'Transfer-Encoding: chunked',
-  'Connection: keep-alive',
-  'Age: 199',
-  'Cache-Control: public, max-age=0, must-revalidate',
-  'strict-transport-security: max-age=31536000; includeSubDomains; preload',
-  'x-matched-path: /[locale]',
-  'x-nextjs-prerender: 1',
-  'x-nextjs-stale-time: 4294967294',
-  'x-powered-by: Next.js',
-  'x-vercel-cache: HIT',
-  'x-vercel-id: sfo1::lhr1::mqksv-1744909302718-4862dd69bea3',
-  'cf-cache-status: DYNAMIC',
-  'vary: accept-encoding',
-  'X-Content-Type-Options: nosniff',
-  'Server: cloudflare',
-  'CF-RAY: 931d7c65ecfde9e4-LAX',
   '',
   '0',
   '',
@@ -35,7 +19,7 @@ const FRAGMENT = Buffer.from([
 
 const results = {};
 
-for (const [label, wasm] of [['updated', updated]]) {
+for (const [label, wasm] of [['main', main], ['updated', updated]]) {
   const mod = await WebAssembly.compile(wasm)
   const { exports: llhttp } = await WebAssembly.instantiate(mod, {
     env: {
