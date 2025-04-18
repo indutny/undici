@@ -2642,6 +2642,46 @@ static llparse_state_t llhttp__internal__run(
     }
     case s_n_llhttp__internal__n_header_value:
     s_n_llhttp__internal__n_header_value: {
+      if (p >= endp) {
+        return s_n_llhttp__internal__n_header_value;
+      }
+      #ifdef __wasm_simd128__
+      v128_t input;
+      v128_t mask;
+      v128_t single;
+      int match_len;
+      const unsigned char* aligned_p;
+
+      aligned_p = (const unsigned char*) ((intptr_t) p & ~(0xf));
+    
+      /* Load input from aligned location */
+      input = wasm_v128_load(aligned_p);
+      /* Find first character that does not match `ranges` */
+      single = wasm_i8x16_ne(input, wasm_u8x16_const_splat(0x9));
+      mask = single;
+      single = wasm_v128_or(
+        wasm_i8x16_lt(input, wasm_u8x16_const_splat(' ')),
+        wasm_i8x16_gt(input, wasm_u8x16_const_splat('~'))
+      );
+      mask = wasm_v128_and(mask, single);
+      single = wasm_v128_or(
+        wasm_i8x16_lt(input, wasm_u8x16_const_splat(0x80)),
+        wasm_i8x16_gt(input, wasm_u8x16_const_splat(0xff))
+      );
+      mask = wasm_v128_and(mask, single);
+      uint32_t bitmask = wasm_i8x16_bitmask(mask);
+      // Zero alignment
+      bitmask >>= (intptr_t) p & 0xf;
+      bitmask <<= (intptr_t) p & 0xf;
+      // Bitmask it at most 16 bits
+      bitmask |= 0x10000;
+      match_len = __builtin_ctz(bitmask);
+      p = aligned_p + match_len;
+      if (match_len != 16) {
+        goto s_n_llhttp__internal__n_header_value_otherwise;
+      }
+      goto s_n_llhttp__internal__n_header_value;
+      #endif  /* __wasm_simd128__ */
       static uint8_t lookup_table[] = {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -2660,64 +2700,6 @@ static llparse_state_t llhttp__internal__run(
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
       };
-      if (p == endp) {
-        return s_n_llhttp__internal__n_header_value;
-      }
-      #ifdef __SSE4_2__
-      if (endp - p >= 16) {
-        __m128i ranges;
-        __m128i input;
-        int match_len;
-      
-        /* Load input */
-        input = _mm_loadu_si128((__m128i const*) p);
-        ranges = _mm_loadu_si128((__m128i const*) llparse_blob6);
-      
-        /* Find first character that does not match `ranges` */
-        match_len = _mm_cmpestri(ranges, 6,
-            input, 16,
-            _SIDD_UBYTE_OPS | _SIDD_CMP_RANGES |
-              _SIDD_NEGATIVE_POLARITY);
-      
-        if (match_len != 0) {
-          p += match_len;
-          goto s_n_llhttp__internal__n_header_value;
-        }
-        goto s_n_llhttp__internal__n_header_value_otherwise;
-      }
-      #endif  /* __SSE4_2__ */
-      #ifdef __wasm_simd128__
-      if (endp - p >= 16) {
-        v128_t input;
-        v128_t mask;
-        v128_t single;
-        int match_len;
-      
-        /* Load input */
-        input = wasm_v128_load(p);
-        /* Find first character that does not match `ranges` */
-        single = wasm_i8x16_ne(input, wasm_u8x16_const_splat(0x9));
-        mask = single;
-        single = wasm_v128_or(
-          wasm_i8x16_lt(input, wasm_u8x16_const_splat(' ')),
-          wasm_i8x16_gt(input, wasm_u8x16_const_splat('~'))
-        );
-        mask = wasm_v128_and(mask, single);
-        single = wasm_v128_or(
-          wasm_i8x16_lt(input, wasm_u8x16_const_splat(0x80)),
-          wasm_i8x16_gt(input, wasm_u8x16_const_splat(0xff))
-        );
-        mask = wasm_v128_and(mask, single);
-        match_len = __builtin_ctz(
-          0x10000 | wasm_i8x16_bitmask(mask)
-        );
-        p += match_len;
-        if (match_len != 16) {
-          goto s_n_llhttp__internal__n_header_value_otherwise;
-        }
-        goto s_n_llhttp__internal__n_header_value;
-      }
-      #endif  /* __wasm_simd128__ */
       switch (lookup_table[(uint8_t) *p]) {
         case 1: {
           p++;

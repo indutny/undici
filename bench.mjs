@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 
-import generic from './lib/llhttp/llhttp-wasm.js';
-import simd from './lib/llhttp/llhttp_simd-wasm.js';
+import main from './main-wasm.js';
+import updated from './lib/llhttp/llhttp_simd-wasm.js';
 import constants from './lib/llhttp/constants.js';
 
-const WARM_UP = 1e3;
-const COUNT = 1e6;
+const WARM_UP = 1000;
+const COUNT = 1000000;
 
 const FRAGMENT = Buffer.from([
   'HTTP/1.1 200 OK',
@@ -35,15 +35,19 @@ const FRAGMENT = Buffer.from([
 
 const results = {};
 
-for (const [label, wasm] of [['generic', generic], ['simd', simd]]) {
+for (const [label, wasm] of [['updated', updated]]) {
   const mod = await WebAssembly.compile(wasm)
   const { exports: llhttp } = await WebAssembly.instantiate(mod, {
     env: {
+      wasm_on_debug: (label, x) => {
+ //       console.log(Buffer.from(llhttp.memory.buffer).slice(label, label + 10).toString(), x, x.toString(2));
+      },
       wasm_on_url: () => { },
       wasm_on_status: () => { },
       wasm_on_message_begin: () => { },
       wasm_on_header_field: () => { },
       wasm_on_header_value: (p, at, len) => {
+//        console.log('header value', at & 0xf, len, Buffer.from(llhttp.memory.buffer).slice(at, at + len).toString());
       },
       wasm_on_headers_complete: () => { },
       wasm_on_body: () => { },
@@ -76,7 +80,7 @@ for (const [label, wasm] of [['generic', generic], ['simd', simd]]) {
 }
 
 console.log(
-  'simd/generic ratio',
-  (100 * results.simd / results.generic).toFixed(1),
+  'updated/main ratio',
+  (100 * results.updated / results.main).toFixed(1),
   '%'
 );
