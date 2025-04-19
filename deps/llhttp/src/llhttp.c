@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <string.h>
 
 #ifdef __SSE4_2__
@@ -2709,14 +2708,15 @@ static llparse_state_t llhttp__internal__run(
           wasm_i8x16_le(input, wasm_u8x16_const_splat(0xff))
         );
         mask = wasm_v128_or(mask, single);
+        if (wasm_i8x16_all_true(mask)) {
+          p += 16;
+          goto s_n_llhttp__internal__n_header_value;
+        }
         match_len = __builtin_ctz(
           ~wasm_i8x16_bitmask(mask)
         );
         p += match_len;
-        if (match_len != 16) {
-          goto s_n_llhttp__internal__n_header_value_otherwise;
-        }
-        goto s_n_llhttp__internal__n_header_value;
+        goto s_n_llhttp__internal__n_header_value_otherwise;
       }
       #endif  /* __wasm_simd128__ */
       switch (lookup_table[(uint8_t) *p]) {
