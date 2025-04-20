@@ -2687,7 +2687,7 @@ static llparse_state_t llhttp__internal__run(
       }
       #endif  /* __SSE4_2__ */
       #ifdef __wasm_simd128__
-      if (endp - p >= 16) {
+      while (endp - p >= 16) {
         v128_t input;
         v128_t mask;
         v128_t single;
@@ -2716,7 +2716,9 @@ static llparse_state_t llhttp__internal__run(
           goto s_n_llhttp__internal__n_header_value_otherwise;
         }
         p += 16;
-        goto s_n_llhttp__internal__n_header_value;
+      }
+      if (p == endp) {
+        return s_n_llhttp__internal__n_header_value;
       }
       #endif  /* __wasm_simd128__ */
       switch (lookup_table[(uint8_t) *p]) {
